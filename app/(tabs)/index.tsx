@@ -5,61 +5,28 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
+  Modal,
+  Dimensions,
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
-import MapView, { Marker, Region } from "react-native-maps";
-import * as Location from "expo-location";
+import MapView, { Marker } from "react-native-maps";
 import { FAKE_DATA } from "../data/fakeData";
+import CreateAlertScreen from "@/components/CreateAlertScreen";
+import { useLocation } from "@/hooks/useLocation";
+
+const { height } = Dimensions.get("window");
+const TAB_BAR_HEIGHT = 80;
 
 const Home: React.FC = () => {
-  const [region, setRegion] = useState<Region | null>(null);
-  const [locationError, setLocationError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const getUserLocation = async () => {
-      try {
-        // request location permission
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== "granted") {
-          console.log("Permission to access location was denied");
-          setLocationError("Permission to access location was denied");
-          return;
-        }
-
-        const userLocation = await Location.getCurrentPositionAsync({});
-        const { latitude, longitude } = userLocation.coords;
-        setRegion({
-          latitude,
-          longitude,
-          latitudeDelta: 0.0922,
-          longitudeDelta: 0.0421,
-        });
-      } catch (error) {
-        console.log("Error fetching location. Please try again.");
-        setLocationError("Error fetching location. Please try again.");
-      }
-    };
-
-    getUserLocation();
-  }, []);
-
-  if (locationError) {
-    console.log("Error");
-    Alert.alert("Location Error", locationError);
-  }
+  const { region } = useLocation();
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
   return (
-    <View className="flex-1 bg-black pt-12 px-5">
-      {/* Title */}
-      <Text className="text-white text-2xl font-bold self-center mb-3">
-        SafTA
-      </Text>
-
+    <View className="flex-1 bg-black">
       {/* Map */}
       {region ? (
         <MapView
-          style={styles.map}
+          style={[styles.map, { height: height - TAB_BAR_HEIGHT }]}
           initialRegion={region}
           showsUserLocation
           showsMyLocationButton
@@ -81,24 +48,32 @@ const Home: React.FC = () => {
       )}
 
       {/* Search Bar */}
-      <View className="flex-row bg-white rounded-full px-4 items-center mb-3">
+      <View className="absolute bottom-32 left-5 right-5 flex-row bg-white rounded-full px-4 items-center">
         <TextInput
-          placeholder="Search places here"
+          placeholder="Search"
           placeholderTextColor="#888"
           className="flex-1 h-10 text-black text-base"
         />
         <FontAwesome name="search" size={24} color="black" />
       </View>
 
-      {/* Create Alert Button */}
+      {/* Alert Button */}
       <TouchableOpacity
-        className="bg-white p-4 rounded-full items-center mb-24"
-        onPress={() => Alert.alert("Feature Coming Soon", "Create an alert!")}
+        className="absolute bottom-48 right-5 bg-orange-500 w-16 h-16 rounded-full justify-center items-center shadow-lg"
+        onPress={() => setIsModalVisible(true)}
       >
-        <Text className="text-red-500 font-bold text-base">
-          CREATE AN ALERT
-        </Text>
+        <FontAwesome name="exclamation" size={24} color="white" />
       </TouchableOpacity>
+
+      {/* Create Alert Modal */}
+      <Modal
+        visible={isModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setIsModalVisible(false)}
+      >
+        <CreateAlertScreen goBack={() => setIsModalVisible(false)} />
+      </Modal>
     </View>
   );
 };
@@ -107,9 +82,9 @@ export default Home;
 
 const styles = StyleSheet.create({
   map: {
-    flex: 1,
-    marginVertical: 20,
-    borderRadius: 10,
+    width: "100%",
+    margin: 0,
+    borderRadius: 0,
     overflow: "hidden",
   },
 });
