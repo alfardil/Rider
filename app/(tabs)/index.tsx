@@ -1,74 +1,115 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+} from "react-native";
+import { FontAwesome } from "@expo/vector-icons";
+import MapView, { Marker, Region } from "react-native-maps";
+import * as Location from "expo-location";
+import { FAKE_DATA } from "../data/fakeData";
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+const Home: React.FC = () => {
+  const [region, setRegion] = useState<Region | null>(null);
+  const [locationError, setLocationError] = useState<string | null>(null);
 
-export default function HomeScreen() {
+  useEffect(() => {
+    const getUserLocation = async () => {
+      try {
+        // request location permission
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") {
+          console.log("Permission to access location was denied");
+          setLocationError("Permission to access location was denied");
+          return;
+        }
+
+        const userLocation = await Location.getCurrentPositionAsync({});
+        const { latitude, longitude } = userLocation.coords;
+        setRegion({
+          latitude,
+          longitude,
+          latitudeDelta: 0.0922,
+          longitudeDelta: 0.0421,
+        });
+      } catch (error) {
+        console.log("Error fetching location. Please try again.");
+        setLocationError("Error fetching location. Please try again.");
+      }
+    };
+
+    getUserLocation();
+  }, []);
+
+  if (locationError) {
+    console.log("Error");
+    Alert.alert("Location Error", locationError);
+  }
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+    <View className="flex-1 bg-black pt-12 px-5">
+      {/* Title */}
+      <Text className="text-white text-2xl font-bold self-center mb-3">
+        SafTA
+      </Text>
+
+      {/* Map */}
+      {region ? (
+        <MapView
+          style={styles.map}
+          initialRegion={region}
+          showsUserLocation
+          showsMyLocationButton
+        >
+          {FAKE_DATA.map((problem) => (
+            <Marker
+              key={problem.id}
+              coordinate={problem.location}
+              pinColor={problem.verified ? "red" : "yellow"}
+              title={problem.title}
+              description={problem.description}
+            />
+          ))}
+        </MapView>
+      ) : (
+        <Text className="text-white text-lg text-center mt-12">
+          Fetching your location...
+        </Text>
+      )}
+
+      {/* Search Bar */}
+      <View className="flex-row bg-white rounded-full px-4 items-center mb-3">
+        <TextInput
+          placeholder="Search places here"
+          placeholderTextColor="#888"
+          className="flex-1 h-10 text-black text-base"
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+        <FontAwesome name="search" size={24} color="black" />
+      </View>
+
+      {/* Create Alert Button */}
+      <TouchableOpacity
+        className="bg-white p-4 rounded-full items-center mb-24"
+        onPress={() => Alert.alert("Feature Coming Soon", "Create an alert!")}
+      >
+        <Text className="text-red-500 font-bold text-base">
+          CREATE AN ALERT
+        </Text>
+      </TouchableOpacity>
+    </View>
   );
-}
+};
+
+export default Home;
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  map: {
+    flex: 1,
+    marginVertical: 20,
+    borderRadius: 10,
+    overflow: "hidden",
   },
 });
