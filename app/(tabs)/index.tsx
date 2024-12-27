@@ -1,25 +1,30 @@
-import React, { useEffect, useState } from "react";
+import { useFakeDataStore } from "@/app/data/hooks";
+import { RootStackParamList } from "@/app/types/types";
+import CreateAlertScreen from "@/components/CreateAlertScreen";
+import MapMarker from "@/components/MapMarker";
+import { useLocation } from "@/hooks/useLocation";
+import { FontAwesome } from "@expo/vector-icons";
+import { useNavigation, useRouter } from "expo-router";
+import React, { useState } from "react";
 import {
-  View,
+  Dimensions,
+  Modal,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  Modal,
-  Dimensions,
+  View,
 } from "react-native";
-import { FontAwesome } from "@expo/vector-icons";
 import MapView, { Marker } from "react-native-maps";
-import { FAKE_DATA } from "../data/fakeData";
-import CreateAlertScreen from "@/components/CreateAlertScreen";
-import { useLocation } from "@/hooks/useLocation";
 
 const { height } = Dimensions.get("window");
 const TAB_BAR_HEIGHT = 80;
 
 const Home: React.FC = () => {
+  const router = useRouter();
   const { region } = useLocation();
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const problems = useFakeDataStore((state) => state.problems);
 
   return (
     <View className="flex-1 bg-black">
@@ -31,14 +36,8 @@ const Home: React.FC = () => {
           showsUserLocation
           showsMyLocationButton
         >
-          {FAKE_DATA.map((problem) => (
-            <Marker
-              key={problem.id}
-              coordinate={problem.location}
-              pinColor={problem.verified ? "red" : "yellow"}
-              title={problem.title}
-              description={problem.description}
-            />
+          {problems.map((problem) => (
+            <MapMarker key={problem.id} problem={problem} />
           ))}
         </MapView>
       ) : (

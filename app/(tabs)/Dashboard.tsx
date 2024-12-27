@@ -1,18 +1,20 @@
-import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  FlatList,
-  ActivityIndicator,
-  RefreshControl,
-  Button,
-  SafeAreaView,
-  TouchableOpacity,
-} from "react-native";
-import { ReportedProblem, RootStackParamList } from "../types/types";
+import { useFakeDataStore } from "@/app/data/hooks";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { FAKE_DATA } from "../data/fakeData";
+import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Button,
+  FlatList,
+  RefreshControl,
+  SafeAreaView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { useShallow } from "zustand/shallow";
+import { ReportedProblem, RootStackParamList } from "../types/types";
+import { useRouter } from "expo-router";
 
 type NavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -20,8 +22,10 @@ type NavigationProp = NativeStackNavigationProp<
 >;
 
 const Dashboard: React.FC = () => {
-  const navigation = useNavigation<NavigationProp>();
-  const [problems, setProblems] = useState<ReportedProblem[]>([]);
+  const router = useRouter();
+  const [problems, setProblems] = useFakeDataStore(
+    useShallow((state) => [state.problems, state.setProblems])
+  );
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,7 +33,6 @@ const Dashboard: React.FC = () => {
   const fetchProblems = () => {
     setLoading(true);
     setTimeout(() => {
-      setProblems(FAKE_DATA);
       setError(null);
       setLoading(false);
     }, 1000);
@@ -42,7 +45,6 @@ const Dashboard: React.FC = () => {
   const onRefresh = () => {
     setRefreshing(true);
     setTimeout(() => {
-      setProblems(FAKE_DATA);
       setRefreshing(false);
     }, 1000);
   };
@@ -62,17 +64,19 @@ const Dashboard: React.FC = () => {
     };
 
     return (
-      <View className="bg-gray-800 p-4 rounded-lg mb-4">
-        <Text className="text-lg font-bold text-white">{item.title}</Text>
-        <Text className="text-sm text-gray-400">{item.description}</Text>
-        <Text className="text-sm mt-2 text-gray-300">
-          Status:{" "}
-          <Text className={getStatusColor(item.status)}>{item.status}</Text>
-        </Text>
-        <Text className="text-sm mt-1 text-gray-300">
-          Reported on: {new Date(item.date).toLocaleDateString()}
-        </Text>
-      </View>
+      <TouchableOpacity onPress={() => router.push(`/details/${item.id}`)}>
+        <View className="bg-gray-800 p-4 rounded-lg mb-4">
+          <Text className="text-lg font-bold text-white">{item.title}</Text>
+          <Text className="text-sm text-gray-400">{item.description}</Text>
+          <Text className="text-sm mt-2 text-gray-300">
+            Status:{" "}
+            <Text className={getStatusColor(item.status)}>{item.status}</Text>
+          </Text>
+          <Text className="text-sm mt-1 text-gray-300">
+            Reported on: {new Date(item.date).toLocaleDateString()}
+          </Text>
+        </View>
+      </TouchableOpacity>
     );
   };
 

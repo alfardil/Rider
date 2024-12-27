@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 
@@ -6,6 +7,8 @@ interface Props {
 }
 
 const CreateAlertScreen: React.FC<Props> = ({ goBack }) => {
+  const router = useRouter();
+
   return (
     <View className="flex-1 bg-black px-5 py-10">
       {/* Back Button */}
@@ -19,7 +22,13 @@ const CreateAlertScreen: React.FC<Props> = ({ goBack }) => {
       </Text>
 
       {/* Incident Report Button */}
-      <TouchableOpacity className="bg-blue-500 rounded-lg p-5 mb-5">
+      <TouchableOpacity
+        className="bg-blue-500 rounded-lg p-5 mb-5"
+        onPress={() => {
+          router.push("/incident");
+          goBack();
+        }}
+      >
         <Text className="text-white text-lg font-bold text-center">
           INCIDENT REPORT
         </Text>
