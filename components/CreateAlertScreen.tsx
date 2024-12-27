@@ -35,7 +35,13 @@ const CreateAlertScreen: React.FC<Props> = ({ goBack }) => {
       </TouchableOpacity>
 
       {/* Transit Update Button */}
-      <TouchableOpacity className="bg-green-500 rounded-lg p-5">
+      <TouchableOpacity
+        className="bg-green-500 rounded-lg p-5"
+        onPress={() => {
+          router.push("/transitUpdate");
+          goBack();
+        }}
+      >
         <Text className="text-white text-lg font-bold text-center">
           TRANSIT UPDATE
         </Text>

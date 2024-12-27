@@ -6,6 +6,7 @@ export interface ReportedProblem {
   date: string;
   location: { latitude: number; longitude: number };
   verified: boolean;
+  selectedStop?: string | null;
 }
 
 export default ReportedProblem;

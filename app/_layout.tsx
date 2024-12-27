@@ -50,6 +50,13 @@ export default function RootLayout() {
             headerBackTitle: "Go back",
           }}
         />
+        <Stack.Screen
+          name="transitUpdate/index"
+          options={{
+            title: "Transit Update",
+            headerBackTitle: "Go back",
+          }}
+        />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>
