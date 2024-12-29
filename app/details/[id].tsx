@@ -3,6 +3,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useMemo } from "react";
 import { Text, View } from "react-native";
 import MapView, { Marker } from "react-native-maps";
+import dayjs from "dayjs";
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -41,7 +42,7 @@ export default function Details() {
         <Text className={getStatusColor(problem.status)}>{problem.status}</Text>
       </Text>
       <Text className="text-sm mt-4 text-gray-300">
-        Reported on: {new Date(problem.date).toLocaleDateString()}
+        Reported on: {dayjs(problem.date, "YYYY-MM-DD").format("MM/DD/YYYY")}
       </Text>
       <MapView
         style={{

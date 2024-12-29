@@ -16,6 +16,7 @@ import { useFakeDataStore } from "@/app/data/hooks";
 import { useShallow } from "zustand/shallow";
 import { subwayStops } from "../data/subwayStops";
 import { submitTransitUpdateSchema } from "./types";
+import { DateField } from "@/components/DateField";
 
 export default function TransitUpdateForm() {
   const router = useRouter();
@@ -25,29 +26,29 @@ export default function TransitUpdateForm() {
     useShallow((state) => [state.problems, state.setProblems])
   );
 
-  const {
-    control,
-    handleSubmit,
-    watch,
-    setValue,
-    formState: { errors },
-  } = useForm<z.infer<typeof submitTransitUpdateSchema>>({
+  const form = useForm<z.infer<typeof submitTransitUpdateSchema>>({
     resolver: zodResolver(submitTransitUpdateSchema),
     defaultValues: {
       id: problems.length > 0 ? problems[problems.length - 1].id + 1 : 1,
       title: "",
       description: "",
       status: "Open",
-      date: "",
+      date: new Date().toISOString().split("T")[0],
       lines: subwayStops,
       selectedLine: undefined,
       verified: false,
-      location: {
-        latitude: 0,
-        longitude: 0,
-      },
+      location: { latitude: 0, longitude: 0 },
+      selectedStop: null,
     },
   });
+
+  const {
+    control,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors },
+  } = form;
 
   const selectedLine = watch("selectedLine");
 
@@ -140,27 +141,7 @@ export default function TransitUpdateForm() {
           <Text className="text-red-500 mb-2">{errors.status.message}</Text>
         )}
 
-        {/* Date Field */}
-        <Text className="text-white text-lg font-bold mt-4 mb-2">
-          Date (YYYY-MM-DD)
-        </Text>
-        <Controller
-          control={control}
-          name="date"
-          render={({ field: { onChange, onBlur, value } }) => (
-            <TextInput
-              value={value}
-              onBlur={onBlur}
-              onChangeText={onChange}
-              className="bg-gray-800 text-white p-4 rounded-lg mb-2"
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor="#9CA3AF"
-            />
-          )}
-        />
-        {errors.date && (
-          <Text className="text-red-500 mb-2">{errors.date.message}</Text>
-        )}
+        <DateField form={form} label="Date" readOnly />
 
         {/* Train Lines */}
         <Text className="text-white text-lg font-bold mt-4 mb-2">

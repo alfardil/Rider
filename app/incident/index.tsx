@@ -17,6 +17,7 @@ import { z } from "zod";
 import { useFakeDataStore } from "@/app/data/hooks";
 import { useShallow } from "zustand/shallow";
 import { useRouter } from "expo-router";
+import { DateField } from "@/components/DateField";
 
 export default function IncidentForm() {
   const router = useRouter();
@@ -25,21 +26,14 @@ export default function IncidentForm() {
     useShallow((state) => [state.problems, state.setProblems])
   );
 
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    watch,
-    control,
-    formState: { errors },
-  } = useForm({
+  const form = useForm({
     resolver: zodResolver(submitIncidentSchema),
     defaultValues: {
       id: problems[problems.length - 1].id + 1,
       title: "",
       description: "",
       status: "Open" as const,
-      date: "",
+      date: new Date().toISOString().split("T")[0],
       location: {
         latitude: 0,
         longitude: 0,
@@ -47,6 +41,15 @@ export default function IncidentForm() {
       verified: false,
     },
   });
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    control,
+    formState: { errors },
+  } = form;
 
   const onSubmit = (data: z.infer<typeof submitIncidentSchema>) => {
     setProblems([...problems, data]);
@@ -111,26 +114,7 @@ export default function IncidentForm() {
           <Text className="text-red-500">{errors.description.message}</Text>
         )}
 
-        <Text className="text-white text-lg font-bold mt-4">
-          Date (YYYY-MM-DD)
-        </Text>
-        <Controller
-          control={control}
-          name="date"
-          render={({ field: { onChange, onBlur, value } }) => (
-            <TextInput
-              value={value}
-              onBlur={onBlur}
-              onChangeText={(value) => onChange(value)}
-              className="bg-gray-800 text-white p-4 rounded-lg mb-2"
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor="#9CA3AF"
-            />
-          )}
-        />
-        {errors.date && (
-          <Text className="text-red-500">{errors.date.message}</Text>
-        )}
+        <DateField form={form} label="Date" readOnly />
 
         <Text className="text-white text-lg font-bold mt-4 mb-2">Location</Text>
         <MapView
