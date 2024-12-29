@@ -7,6 +7,7 @@ import {
   Alert,
   TouchableOpacity,
   ScrollView,
+  Keyboard,
 } from "react-native";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -84,6 +85,9 @@ export default function TransitUpdateForm() {
               className="bg-gray-800 text-white p-4 rounded-lg mb-2"
               placeholder="Enter Title"
               placeholderTextColor="#9CA3AF"
+              returnKeyType="done"
+              blurOnSubmit
+              onSubmitEditing={() => Keyboard.dismiss()}
             />
           )}
         />
@@ -107,6 +111,9 @@ export default function TransitUpdateForm() {
               placeholder="Enter Description"
               placeholderTextColor="#9CA3AF"
               multiline
+              returnKeyType="done"
+              blurOnSubmit
+              onSubmitEditing={() => Keyboard.dismiss()}
             />
           )}
         />

@@ -1,7 +1,7 @@
 import { useFakeDataStore } from "@/app/data/hooks";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useMemo } from "react";
-import { Text, View } from "react-native";
+import { useMemo, useState } from "react";
+import { Text, TouchableOpacity, View } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import dayjs from "dayjs";
 
@@ -23,6 +23,11 @@ export default function Details() {
   const { id } = useLocalSearchParams();
   const problems = useFakeDataStore((state) => state.problems);
 
+  const [upvotes, setUpvotes] = useState(0);
+  const [downvotes, setDownvotes] = useState(0);
+
+  const [userVote, setUserVote] = useState<"up" | "down" | null>(null);
+
   const problem = useMemo(
     () => problems.find((p) => p.id === Number(id)),
     [id, problems]
@@ -30,8 +35,36 @@ export default function Details() {
 
   if (!problem) {
     router.push("/+not-found");
-    return <></>;
+    return null;
   }
+
+  const handleUpvote = () => {
+    if (userVote === "up") {
+      setUserVote(null);
+      setUpvotes((prev) => prev - 1);
+    } else if (userVote === "down") {
+      setUserVote("up");
+      setDownvotes((prev) => prev - 1);
+      setUpvotes((prev) => prev + 1);
+    } else {
+      setUserVote("up");
+      setUpvotes((prev) => prev + 1);
+    }
+  };
+
+  const handleDownvote = () => {
+    if (userVote === "down") {
+      setUserVote(null);
+      setDownvotes((prev) => prev - 1);
+    } else if (userVote === "up") {
+      setUserVote("down");
+      setUpvotes((prev) => prev - 1);
+      setDownvotes((prev) => prev + 1);
+    } else {
+      setUserVote("down");
+      setDownvotes((prev) => prev + 1);
+    }
+  };
 
   return (
     <View className="flex flex-col items-center h-screen p-8 bg-gray-800">
@@ -44,6 +77,7 @@ export default function Details() {
       <Text className="text-sm mt-4 text-gray-300">
         Reported on: {dayjs(problem.date, "YYYY-MM-DD").format("MM/DD/YYYY")}
       </Text>
+
       <MapView
         style={{
           width: "100%",
@@ -64,7 +98,15 @@ export default function Details() {
         zoomTapEnabled={false}
         scrollDuringRotateOrZoomEnabled={false}
         scrollEnabled={false}
-        // TODO - On press event, should be taken to index page with the coordinates centered.
+        onPress={() =>
+          router.push({
+            pathname: "/",
+            params: {
+              lat: problem.location.latitude,
+              lng: problem.location.longitude,
+            },
+          })
+        }
       >
         <Marker
           coordinate={{
@@ -73,6 +115,24 @@ export default function Details() {
           }}
         />
       </MapView>
+
+      <View className="flex flex-row justify-center space-x-12 mt-16">
+        {/* Upvote */}
+        <View className="items-center">
+          <TouchableOpacity onPress={handleUpvote}>
+            <Text className="text-white text-3xl">👍</Text>
+          </TouchableOpacity>
+          <Text className="text-white text-xl mt-2">{upvotes}</Text>
+        </View>
+
+        {/* Downvote */}
+        <View className="items-center">
+          <TouchableOpacity onPress={handleDownvote}>
+            <Text className="text-white text-3xl">👎</Text>
+          </TouchableOpacity>
+          <Text className="text-white text-xl mt-2">{downvotes}</Text>
+        </View>
+      </View>
     </View>
   );
 }

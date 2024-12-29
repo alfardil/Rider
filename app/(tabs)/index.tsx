@@ -1,13 +1,10 @@
 import { useFakeDataStore } from "@/app/data/hooks";
-import { RootStackParamList } from "@/app/types/types";
-import CreateAlertScreen from "@/components/CreateAlertScreen";
-import MapMarker from "@/components/MapMarker";
-import { useLocation } from "@/hooks/useLocation";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { FontAwesome } from "@expo/vector-icons";
-import { useNavigation, useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Dimensions,
+  Keyboard,
   Modal,
   StyleSheet,
   Text,
@@ -15,7 +12,10 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import MapView, { Marker } from "react-native-maps";
+import MapView from "react-native-maps";
+import MapMarker from "@/components/MapMarker";
+import CreateAlertScreen from "@/components/CreateAlertScreen";
+import { useLocation } from "@/hooks/useLocation";
 
 const { height } = Dimensions.get("window");
 const TAB_BAR_HEIGHT = 80;
@@ -26,13 +26,37 @@ const Home: React.FC = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const problems = useFakeDataStore((state) => state.problems);
 
+  const { lat, lng } = useLocalSearchParams<{
+    lat?: string;
+    lng?: string;
+  }>();
+
+  // decide which region to use (params vs. user location)
+  const regionToUse = useMemo(() => {
+    if (lat && lng) {
+      const parsedLat = parseFloat(lat);
+      const parsedLng = parseFloat(lng);
+
+      return {
+        latitude: parsedLat,
+        longitude: parsedLng,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      };
+    } else if (region) {
+      return region;
+    } else {
+      return null;
+    }
+  }, [lat, lng, region]);
+
   return (
     <View className="flex-1 bg-black">
       {/* Map */}
-      {region ? (
+      {regionToUse ? (
         <MapView
           style={[styles.map, { height: height - TAB_BAR_HEIGHT }]}
-          initialRegion={region}
+          initialRegion={regionToUse}
           showsUserLocation
           showsMyLocationButton
         >
@@ -52,6 +76,9 @@ const Home: React.FC = () => {
           placeholder="Search"
           placeholderTextColor="#888"
           className="flex-1 h-10 text-black text-base"
+          returnKeyType="done"
+          blurOnSubmit
+          onSubmitEditing={() => Keyboard.dismiss()}
         />
         <FontAwesome name="search" size={24} color="black" />
       </View>
