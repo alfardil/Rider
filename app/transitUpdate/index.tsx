@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -16,12 +16,11 @@ import { useFakeDataStore } from "@/app/data/hooks";
 import { useShallow } from "zustand/shallow";
 import { subwayStops } from "../data/subwayStops";
 import { submitTransitUpdateSchema } from "./types";
-import { useLocation } from "@/hooks/useLocation";
 
 export default function TransitUpdateForm() {
   const router = useRouter();
-  const { region } = useLocation();
   const [selectedStop, setSelectedStop] = useState<string | null>(null);
+
   const [problems, setProblems] = useFakeDataStore(
     useShallow((state) => [state.problems, state.setProblems])
   );
@@ -35,7 +34,7 @@ export default function TransitUpdateForm() {
   } = useForm<z.infer<typeof submitTransitUpdateSchema>>({
     resolver: zodResolver(submitTransitUpdateSchema),
     defaultValues: {
-      id: problems[problems.length - 1].id + 1,
+      id: problems.length > 0 ? problems[problems.length - 1].id + 1 : 1,
       title: "",
       description: "",
       status: "Open",
@@ -50,8 +49,6 @@ export default function TransitUpdateForm() {
     },
   });
 
-  useEffect(() => {}, []);
-
   const selectedLine = watch("selectedLine");
 
   const onSubmit = (data: z.infer<typeof submitTransitUpdateSchema>) => {
@@ -65,15 +62,6 @@ export default function TransitUpdateForm() {
       },
     ]);
   };
-  const location = watch("location");
-  useEffect(() => {
-    (() => {
-      if (region) {
-        setValue("location.latitude", region.latitude);
-        setValue("location.longitude", region.longitude);
-      }
-    })();
-  }, [region]);
 
   return (
     <View className="flex-1 bg-gray-900 p-6">
@@ -127,7 +115,7 @@ export default function TransitUpdateForm() {
           </Text>
         )}
 
-        {/* Status Field (Dropdown or manual text input) */}
+        {/* Status Field */}
         <Text className="text-white text-lg font-bold mt-4 mb-2">Status</Text>
         <Controller
           control={control}
@@ -174,7 +162,7 @@ export default function TransitUpdateForm() {
           <Text className="text-red-500 mb-2">{errors.date.message}</Text>
         )}
 
-        {/* Train Lines (Step 1): Select a line */}
+        {/* Train Lines */}
         <Text className="text-white text-lg font-bold mt-4 mb-2">
           Select a Train Line
         </Text>
@@ -212,11 +200,18 @@ export default function TransitUpdateForm() {
             {watch("lines")[selectedLine]?.map((stop) => (
               <TouchableOpacity
                 key={stop.name}
-                onPress={() =>
-                  selectedStop === stop.name
-                    ? setSelectedStop(null)
-                    : setSelectedStop(stop.name)
-                }
+                onPress={() => {
+                  if (selectedStop === stop.name) {
+                    setSelectedStop(null);
+                    setValue("location.latitude", 0);
+                    setValue("location.longitude", 0);
+                  } else {
+                    setSelectedStop(stop.name);
+                    // set the form location to the selected stop's coords
+                    setValue("location.latitude", stop.latitude);
+                    setValue("location.longitude", stop.longitude);
+                  }
+                }}
                 className={`mb-2 p-3 rounded-lg ${
                   selectedStop === stop.name ? "bg-green-500" : "bg-gray-800"
                 }`}
